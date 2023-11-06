@@ -22,7 +22,7 @@ from plotly.subplots import make_subplots
 
 # ## Importing Data
 
-# In[124]:
+# In[2]:
 
 
 PaxNL=pd.read_csv("Pax movement clean.csv") #"C:\\Users\\charl\\Downloads\\Pax movement clean.csv"
@@ -33,13 +33,13 @@ PaxSchiphol=pd.read_csv("83435NED_TypedDataSet_06112023_144215.csv", sep=";",ind
 PaxLanden=pd.read_csv("83435NED_metadata.csv",index_col=0)
 
 
-# In[125]:
+# In[3]:
 
 
 LandenSchiphol = pd.merge(PaxSchiphol, PaxLanden, on='LuchthavensHerkomstBestemming')
 
 
-# In[126]:
+# In[4]:
 
 
 # Rename columns
@@ -49,52 +49,52 @@ LandenSchiphol = LandenSchiphol.rename(columns={'TotaalAantalPassagiers_1': 'Tot
 LandenSchiphol = LandenSchiphol[['Land','Perioden', 'Totaal Passagiers', 'Passagiers Aangekomen','Passagiers Vertrokken']]  # Replace with the actual column names in the desired order
 
 
-# In[127]:
+# In[5]:
 
 
 LandenSchiphol.isna().sum()
 
 
-# In[128]:
+# In[6]:
 
 
 # Drop rows with NaN values
 LandenSchiphol.dropna(inplace=True)
 
 
-# In[129]:
+# In[7]:
 
 
 # Extracting the year from the 'Column' column
 LandenSchiphol['Perioden'] = LandenSchiphol['Perioden'].str[:4]
 
 
-# In[130]:
+# In[8]:
 
 
 LandenSchiphol.info()
 
 
-# In[131]:
+# In[9]:
 
 
 LandenSchiphol['Perioden'] = pd.to_datetime(LandenSchiphol['Perioden'])
 LandenSchiphol['Perioden'] = LandenSchiphol['Perioden'].dt.year
 
 
-# In[132]:
+# In[10]:
 
 
 LandenSchiphol
 
 
-# In[133]:
+# In[11]:
 
 
 LandenSchiphol.columns
 
 
-# In[134]:
+# In[12]:
 
 
 import pandas as pd
@@ -136,7 +136,7 @@ def convert_to_datetime(period):
 PaxNL['Perioden'] = PaxNL['Perioden'].apply(convert_to_datetime)
 
 
-# In[135]:
+# In[13]:
 
 
 headers = {
@@ -164,7 +164,7 @@ else:
     print(f"API request failed with status code: {response.status_code}")
 
 
-# In[136]:
+# In[14]:
 
 
 flight_df = pd.DataFrame(data)
@@ -173,44 +173,44 @@ df5 = df4.head()
 df4.columns
 
 
-# In[137]:
+# In[15]:
 
 
 df4[['scheduleTime', 'scheduleDate', 'flightDirection', 'flightName','route.destinations' , 'lastUpdatedAt','prefixICAO', 'aircraftType.iataMain', 'gate', 'terminal']] 
 
 
-# In[138]:
+# In[16]:
 
 
 df4["scheduleTime"].max()
 
 
-# In[139]:
+# In[17]:
 
 
 PaxNL
 
 
-# In[140]:
+# In[18]:
 
 
 PaxNLyear
 
 
-# In[141]:
+# In[19]:
 
 
 # Convert the 'Perioden' column to datetime format
 PaxNLyear['Perioden'] = pd.to_datetime(PaxNLyear['Perioden'], format='%Y')
 
 
-# In[142]:
+# In[20]:
 
 
 PaxNLmonths
 
 
-# In[143]:
+# In[21]:
 
 
 PaxNLmonths['Perioden'] = pd.to_datetime(PaxNLmonths['Perioden'], format='%d/%m/%Y')
@@ -220,25 +220,25 @@ PaxNLmonths['Perioden'] = pd.to_datetime(PaxNLmonths['Perioden'], format='%d/%m/
 
 # #### Jaarlijks
 
-# In[144]:
+# In[22]:
 
 
 PaxNLyear.head()
 
 
-# In[145]:
+# In[23]:
 
 
 PaxNLyear['Jaar'] = PaxNLyear['Perioden'].dt.year
 
 
-# In[146]:
+# In[24]:
 
 
 PaxNLyear["Luchthavens"].unique()
 
 
-# In[1]:
+# In[25]:
 
 
 st.title('Bar plot van de totale vluchten per jaar')
@@ -250,7 +250,7 @@ fig = px.bar(PaxNLyear, x='Jaar', y='Totaal Vluchten', color='Luchthavens', barm
 st.plotly_chart(fig)
 
 
-# In[148]:
+# In[26]:
 
 
 
@@ -309,28 +309,21 @@ fig.show()
 
 # ***a bar chart per year to show the amount of flights/passengers/cargo per kwartaal
 
-# In[149]:
+# In[27]:
 
 
 PaxNLmonths.head(1)
 
 
-# In[150]:
+# In[28]:
 
 
 PaxNLmonths["Luchthavens"].unique()
 
 
-# In[151]:
-
-
-plot = px.scatter(random_x, random_y) 
-plot.show()
-
-
 # ### Geospatial Data
 
-# In[152]:
+# In[29]:
 
 
 
@@ -342,7 +335,7 @@ PaxNL_Groningen = PaxNLyear[PaxNLyear.Luchthavens == 'Groningen Airport Eelde']
 PaxNL_Rotterdam.head()
 
 
-# In[153]:
+# In[30]:
 
 
 airports = {
@@ -355,7 +348,7 @@ airports = {
 filtered_df = PaxNLyear[PaxNLyear['Luchthavens'].isin(airports.keys())]
 
 
-# In[154]:
+# In[31]:
 
 
 schiphol = [52.308056, 4.764167]
@@ -365,7 +358,7 @@ maastricht = [50.91249905, 5.77132050283004]
 groningen = [53.1214959, 6.58172323449291]
 
 
-# In[155]:
+# In[32]:
 
 
 map_center = [52.1326, 5.2913]
@@ -500,7 +493,7 @@ folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
 kaart
 
 
-# In[156]:
+# In[33]:
 
 
 PaxNLmonths[PaxNLmonths['Luchthavens'] == 'Amsterdam Airport Schiphol']
@@ -508,7 +501,7 @@ PaxNLmonths[PaxNLmonths['Luchthavens'] == 'Amsterdam Airport Schiphol']
 
 # ### Scatterplot met Statische analyse
 
-# In[158]:
+# In[34]:
 
 
 import pandas as pd
@@ -589,7 +582,7 @@ fig.show()
 
 # ## Hulpbronnen
 
-# In[159]:
+# In[35]:
 
 
 import pandas as pd
