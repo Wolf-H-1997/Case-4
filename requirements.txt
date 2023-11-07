@@ -8,3 +8,4 @@ matplotlib
 scipy
 json5==0.9.5
 scikit-learn @ file:///C:/ci/scikit-learn_1614446896245/work
+scikit-image==0.18.1
