@@ -11,3 +11,4 @@ scikit-learn @ file:///C:/ci/scikit-learn_1614446896245/work
 scikit-image==0.18.1
 sklearn==0.0.post11
 threadpoolctl == 2.0.0
+joblib>=0.11
