@@ -11,4 +11,4 @@ scikit-learn==0.24.1
 scikit-image==0.18.1
 sklearn==0.0.post11
 threadpoolctl == 2.0.0
-joblib>=1.0.1
+joblib ==1.0.1
