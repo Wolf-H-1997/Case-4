@@ -17,6 +17,7 @@ import plotly.express as px
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sklearn.metrics import r2_score
 
 
 
@@ -85,7 +86,6 @@ LandenSchiphol['Perioden'] = LandenSchiphol['Perioden'].dt.year
 # In[10]:
 
 
-import pandas as pd
 
 # Define a custom mapping for the Dutch month names
 dutch_to_english_month = {
@@ -294,13 +294,6 @@ groningen = [53.1214959, 6.58172323449291]
 
 # In[21]:
 
-
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import numpy as np
-from sklearn.metrics import r2_score
-
 # Assuming you have already loaded PaxNLmonths DataFrame
 
 # Define colors
@@ -376,8 +369,6 @@ st.plotly_chart(fig)
 # In[22]:
 
 
-import pandas as pd
-import plotly.graph_objects as go
 
 # Group the data by 'Land' and 'Perioden' and sum the 'Totaal Passagiers' values
 summed_data = LandenSchiphol.groupby(['Land', 'Perioden'])['Totaal Passagiers'].sum().reset_index()
