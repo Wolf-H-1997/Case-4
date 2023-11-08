@@ -9,5 +9,5 @@ json5==0.9.5
 scipy
 seaborn
 matplotlib
-sklearn
+sklearn == 0.0.post11
 
