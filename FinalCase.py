@@ -84,18 +84,6 @@ LandenSchiphol['Perioden'] = LandenSchiphol['Perioden'].dt.year
 # In[10]:
 
 
-LandenSchiphol
-
-
-# In[11]:
-
-
-LandenSchiphol.columns
-
-
-# In[12]:
-
-
 import pandas as pd
 
 # Define a custom mapping for the Dutch month names
@@ -135,7 +123,7 @@ def convert_to_datetime(period):
 PaxNL['Perioden'] = PaxNL['Perioden'].apply(convert_to_datetime)
 
 
-# In[13]:
+# In[11]:
 
 
 headers = {
@@ -163,81 +151,38 @@ else:
     print(f"API request failed with status code: {response.status_code}")
 
 
-# In[14]:
+# In[12]:
 
 
 flight_df = pd.DataFrame(data)
 df4 = pd.json_normalize(flight_df.flights)
-df5 = df4.head()
-df4.columns
 
 
-# In[15]:
+# In[13]:
 
 
-df4[['scheduleTime', 'scheduleDate', 'flightDirection', 'flightName','route.destinations' , 'lastUpdatedAt','prefixICAO', 'aircraftType.iataMain', 'gate', 'terminal']] 
+ipa4 = df4[['scheduleTime', 'scheduleDate', 'flightDirection', 'flightName','route.destinations' , 'lastUpdatedAt','prefixICAO', 'aircraftType.iataMain', 'gate', 'terminal']] 
 
 
-# In[16]:
-
-
-df4["scheduleTime"].max()
-
-
-# In[17]:
-
-
-PaxNL
-
-
-# In[18]:
-
-
-PaxNLyear
-
-
-# In[19]:
-
-
-# Convert the 'Perioden' column to datetime format
-PaxNLyear['Perioden'] = pd.to_datetime(PaxNLyear['Perioden'], format='%Y')
-
-
-# In[20]:
-
-
-PaxNLmonths
-
-
-# In[21]:
+# In[14]:
 
 
 PaxNLmonths['Perioden'] = pd.to_datetime(PaxNLmonths['Perioden'], format='%d/%m/%Y')
+PaxNLyear['Perioden'] = pd.to_datetime(PaxNLyear['Perioden'], format='%Y')
+PaxNLyear['Jaar'] = PaxNLyear['Perioden'].dt.year
 
 
 # ## 1D inspecties
 
 # #### Jaarlijks
 
-# In[22]:
-
-
-PaxNLyear.head()
-
-
-# In[23]:
+# In[15]:
 
 
 PaxNLyear['Jaar'] = PaxNLyear['Perioden'].dt.year
 
 
-# In[24]:
-
-
-PaxNLyear["Luchthavens"].unique()
-
-
-# In[25]:
+# In[16]:
 
 
 st.title('Bar plot van de totale vluchten per jaar')
@@ -249,7 +194,7 @@ fig = px.bar(PaxNLyear, x='Jaar', y='Totaal Vluchten', color='Luchthavens', barm
 st.plotly_chart(fig)
 
 
-# In[26]:
+# In[17]:
 
 
 
@@ -301,28 +246,16 @@ updatemenu.append(dict(buttons=year_buttons, direction="down", showactive=True, 
 
 fig.update_layout(title_text="Aantal passagiers per jaar", updatemenus=updatemenu)
 
-fig.show()
+st.plotly_chart(fig)
 
 
 # #### Per kwartaal
 
 # ***a bar chart per year to show the amount of flights/passengers/cargo per kwartaal
 
-# In[27]:
-
-
-PaxNLmonths.head(1)
-
-
-# In[28]:
-
-
-PaxNLmonths["Luchthavens"].unique()
-
-
 # ### Geospatial Data
 
-# In[29]:
+# In[18]:
 
 
 
@@ -331,10 +264,9 @@ PaxNL_Rotterdam = PaxNLyear[PaxNLyear.Luchthavens == 'Rotterdam The Hague Airpor
 PaxNL_Eindhoven = PaxNLyear[PaxNLyear.Luchthavens == 'Eindhoven Airport']
 PaxNL_Maastricht = PaxNLyear[PaxNLyear.Luchthavens == 'Maastricht Aachen Airport']
 PaxNL_Groningen = PaxNLyear[PaxNLyear.Luchthavens == 'Groningen Airport Eelde']
-PaxNL_Rotterdam.head()
 
 
-# In[30]:
+# In[19]:
 
 
 airports = {
@@ -347,7 +279,7 @@ airports = {
 filtered_df = PaxNLyear[PaxNLyear['Luchthavens'].isin(airports.keys())]
 
 
-# In[31]:
+# In[20]:
 
 
 schiphol = [52.308056, 4.764167]
@@ -357,7 +289,172 @@ maastricht = [50.91249905, 5.77132050283004]
 groningen = [53.1214959, 6.58172323449291]
 
 
-# In[38]:
+# ### Scatterplot met Statische analyse
+
+# In[21]:
+
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+from sklearn.metrics import r2_score
+
+# Assuming you have already loaded PaxNLmonths DataFrame
+
+# Define colors
+colors = {
+    'Totaal luchthavens van nationaal belang': 'darkblue',
+    'Amsterdam Airport Schiphol': 'gold',
+    'Rotterdam The Hague Airport': 'limegreen',
+    'Eindhoven Airport': 'red',
+    'Maastricht Aachen Airport': 'purple',
+    'Groningen Airport Eelde': 'yellow'
+}
+
+# Create a scatter plot for each airport
+fig = go.Figure()
+
+# Initialize lists to store data for the table
+airports = []
+residuals_data = []
+r2_data = []
+
+for airport, color in colors.items():
+    df = PaxNLmonths[PaxNLmonths['Luchthavens'] == airport]
+    fig.add_trace(go.Scatter(x=df['Perioden'], y=df['Totaal Vluchten'], mode='markers', name=airport, marker=dict(color=color)))
+
+    # Compute the trendline for each airport
+    x = pd.to_numeric(df['Perioden'])
+    y = np.log(df['Totaal Vluchten'])
+
+    # Check for infinite or too large values
+    mask = np.isfinite(y)
+    x = x[mask]
+    y = y[mask]
+
+    slope, intercept = np.polyfit(x, y, 1)
+
+    # Store the data in the lists
+    airports.append(airport)
+    residuals_data.append(df['Totaal Vluchten'] - np.exp(intercept + slope * x))
+    r2_data.append(r2_score(y, intercept + slope * x))
+
+    # Create a DataFrame for the forecast for each airport
+    forecast_dates = pd.date_range(start='2022-01-01', end='2025-01-01', freq='M')
+    forecast_df = pd.DataFrame({'Perioden': forecast_dates})
+    forecast_df['Totaal Vluchten'] = np.exp(intercept + slope * pd.to_numeric(forecast_df['Perioden']))
+
+    # Add the forecast line for each airport
+    fig.add_trace(go.Scatter(x=forecast_df['Perioden'], y=forecast_df['Totaal Vluchten'], mode='lines', name=f'{airport} Forecast', line=dict(color=color)))
+
+# Update the layout
+fig.update_layout(
+    title='Vluchten per jaar',
+    xaxis_title='Tijd',
+    yaxis_title='Totaal Vluchten (log)',
+    showlegend=True,
+    yaxis_type="log",
+    xaxis=dict(range=["2022-01-01", "2025-01-01"])  # Extend the range until 2027
+)
+
+# Create a DataFrame for the table
+table_df = pd.DataFrame({
+    'Airport': airports,
+    'Residuals': residuals_data,
+    'R-squared': r2_data
+})
+
+# Display the table
+st.dataframe(table_df)
+st.plotly_chart(fig)
+
+
+# ## Hulpbronnen
+
+# In[22]:
+
+
+import pandas as pd
+import plotly.graph_objects as go
+
+# Group the data by 'Land' and 'Perioden' and sum the 'Totaal Passagiers' values
+summed_data = LandenSchiphol.groupby(['Land', 'Perioden'])['Totaal Passagiers'].sum().reset_index()
+
+# Sort the data for each year separately
+sorted_data_2019 = LandenSchiphol[LandenSchiphol['Perioden'] == 2019].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
+sorted_data_2020 = LandenSchiphol[LandenSchiphol['Perioden'] == 2020].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
+sorted_data_2021 = LandenSchiphol[LandenSchiphol['Perioden'] == 2021].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
+sorted_data_2022 = LandenSchiphol[LandenSchiphol['Perioden'] == 2022].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
+
+st.title("Passenger Details by Country")
+
+# Create figure
+fig = go.Figure()
+
+# Add traces for each year
+for data, year in zip([sorted_data_2019, sorted_data_2020, sorted_data_2021, sorted_data_2022], [2019, 2020, 2021, 2022]):
+    fig.add_trace(
+        go.Bar(x=data.index, y=data['Passagiers Aangekomen'], name=f'Passagiers Aangekomen - {year}', marker_color='orange')
+    )
+    fig.add_trace(
+        go.Bar(x=data.index, y=data['Passagiers Vertrokken'], name=f'Passagiers Vertrokken - {year}', marker_color='blue')
+    )
+
+# Set title
+fig.update_layout(
+    title_text="Passenger Details by Country",
+    xaxis_title="Country",
+    yaxis_title="Passenger Count",
+)
+
+# Add dropdown for the year
+fig.update_layout(
+    updatemenus=[
+        dict(
+            buttons=list([
+                dict(label="All",
+                     method="update",
+                     args=[{"visible": [True, True, True, True, True, True, True, True]},
+                           {"title": "All"}]),
+                dict(label="2019",
+                     method="update",
+                     args=[{"visible": [True, True, False, False, False, False, False, False]},
+                           {"title": "2019"}]),
+                dict(label="2020",
+                     method="update",
+                     args=[{"visible": [False, False, True, True, False, False, False, False]},
+                           {"title": "2020"}]),
+                dict(label="2021",
+                     method="update",
+                     args=[{"visible": [False, False, False, False, True, True, False, False]},
+                           {"title": "2021"}]),
+                dict(label="2022",
+                     method="update",
+                     args=[{"visible": [False, False, False, False, False, False, True, True]},
+                           {"title": "2022"}]),
+            ]),
+        )
+    ]
+)
+
+# Add range slider
+fig.update_layout(
+    xaxis=dict(
+        type="category",
+        rangeslider=dict(
+            visible=True
+        )
+    ),
+    barmode='stack'  # Add this line to stack the bars
+)
+
+st.plotly_chart(fig)
+
+
+# # Streamlit
+
+# In[23]:
 
 
 map_center = [52.1326, 5.2913]
@@ -490,181 +587,4 @@ folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
 
 # laat de kaart zien
 st.write(kaart)
-
-
-# In[33]:
-
-
-PaxNLmonths[PaxNLmonths['Luchthavens'] == 'Amsterdam Airport Schiphol']
-
-
-# ### Scatterplot met Statische analyse
-
-# In[37]:
-
-
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import numpy as np
-from sklearn.metrics import r2_score
-
-# Assuming you have already loaded PaxNLmonths DataFrame
-
-# Define colors
-colors = {
-    'Totaal luchthavens van nationaal belang': 'darkblue',
-    'Amsterdam Airport Schiphol': 'gold',
-    'Rotterdam The Hague Airport': 'limegreen',
-    'Eindhoven Airport': 'red',
-    'Maastricht Aachen Airport': 'purple',
-    'Groningen Airport Eelde': 'yellow'
-}
-
-# Create a scatter plot for each airport
-fig = go.Figure()
-
-# Initialize lists to store data for the table
-airports = []
-residuals_data = []
-r2_data = []
-
-for airport, color in colors.items():
-    df = PaxNLmonths[PaxNLmonths['Luchthavens'] == airport]
-    fig.add_trace(go.Scatter(x=df['Perioden'], y=df['Totaal Vluchten'], mode='markers', name=airport, marker=dict(color=color)))
-
-    # Compute the trendline for each airport
-    x = pd.to_numeric(df['Perioden'])
-    y = np.log(df['Totaal Vluchten'])
-
-    # Check for infinite or too large values
-    mask = np.isfinite(y)
-    x = x[mask]
-    y = y[mask]
-
-    slope, intercept = np.polyfit(x, y, 1)
-
-    # Store the data in the lists
-    airports.append(airport)
-    residuals_data.append(df['Totaal Vluchten'] - np.exp(intercept + slope * x))
-    r2_data.append(r2_score(y, intercept + slope * x))
-
-    # Create a DataFrame for the forecast for each airport
-    forecast_dates = pd.date_range(start='2022-01-01', end='2025-01-01', freq='M')
-    forecast_df = pd.DataFrame({'Perioden': forecast_dates})
-    forecast_df['Totaal Vluchten'] = np.exp(intercept + slope * pd.to_numeric(forecast_df['Perioden']))
-
-    # Add the forecast line for each airport
-    fig.add_trace(go.Scatter(x=forecast_df['Perioden'], y=forecast_df['Totaal Vluchten'], mode='lines', name=f'{airport} Forecast', line=dict(color=color)))
-
-# Update the layout
-fig.update_layout(
-    title='Vluchten per jaar',
-    xaxis_title='Tijd',
-    yaxis_title='Totaal Vluchten (log)',
-    showlegend=True,
-    yaxis_type="log",
-    xaxis=dict(range=["2022-01-01", "2025-01-01"])  # Extend the range until 2027
-)
-
-# Create a DataFrame for the table
-table_df = pd.DataFrame({
-    'Airport': airports,
-    'Residuals': residuals_data,
-    'R-squared': r2_data
-})
-
-# Display the table
-st.dataframe(table_df)
-st.plotly_chart(fig)
-
-
-# ## Hulpbronnen
-
-# In[36]:
-
-
-import pandas as pd
-import plotly.graph_objects as go
-
-# Group the data by 'Land' and 'Perioden' and sum the 'Totaal Passagiers' values
-summed_data = LandenSchiphol.groupby(['Land', 'Perioden'])['Totaal Passagiers'].sum().reset_index()
-
-# Sort the data for each year separately
-sorted_data_2019 = LandenSchiphol[LandenSchiphol['Perioden'] == 2019].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
-sorted_data_2020 = LandenSchiphol[LandenSchiphol['Perioden'] == 2020].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
-sorted_data_2021 = LandenSchiphol[LandenSchiphol['Perioden'] == 2021].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
-sorted_data_2022 = LandenSchiphol[LandenSchiphol['Perioden'] == 2022].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
-
-st.title("Passenger Details by Country")
-
-# Create figure
-fig = go.Figure()
-
-# Add traces for each year
-for data, year in zip([sorted_data_2019, sorted_data_2020, sorted_data_2021, sorted_data_2022], [2019, 2020, 2021, 2022]):
-    fig.add_trace(
-        go.Bar(x=data.index, y=data['Passagiers Aangekomen'], name=f'Passagiers Aangekomen - {year}', marker_color='orange')
-    )
-    fig.add_trace(
-        go.Bar(x=data.index, y=data['Passagiers Vertrokken'], name=f'Passagiers Vertrokken - {year}', marker_color='blue')
-    )
-
-# Set title
-fig.update_layout(
-    title_text="Passenger Details by Country",
-    xaxis_title="Country",
-    yaxis_title="Passenger Count",
-)
-
-# Add dropdown for the year
-fig.update_layout(
-    updatemenus=[
-        dict(
-            buttons=list([
-                dict(label="All",
-                     method="update",
-                     args=[{"visible": [True, True, True, True, True, True, True, True]},
-                           {"title": "All"}]),
-                dict(label="2019",
-                     method="update",
-                     args=[{"visible": [True, True, False, False, False, False, False, False]},
-                           {"title": "2019"}]),
-                dict(label="2020",
-                     method="update",
-                     args=[{"visible": [False, False, True, True, False, False, False, False]},
-                           {"title": "2020"}]),
-                dict(label="2021",
-                     method="update",
-                     args=[{"visible": [False, False, False, False, True, True, False, False]},
-                           {"title": "2021"}]),
-                dict(label="2022",
-                     method="update",
-                     args=[{"visible": [False, False, False, False, False, False, True, True]},
-                           {"title": "2022"}]),
-            ]),
-        )
-    ]
-)
-
-# Add range slider
-fig.update_layout(
-    xaxis=dict(
-        type="category",
-        rangeslider=dict(
-            visible=True
-        )
-    ),
-    barmode='stack'  # Add this line to stack the bars
-)
-
-st.plotly_chart(fig)
-
-
-# # Streamlit
-
-# In[ ]:
-
-
-
 
