@@ -24,7 +24,7 @@ from plotly.subplots import make_subplots
 # In[25]:
 
 
-PaxNL=pd.read_csv("PaxMovementclean") #"C:\\Users\\charl\\Downloads\\Pax movement clean.csv"
+PaxNL=pd.read_csv("Pax movement clean") #"C:\\Users\\charl\\Downloads\\Pax movement clean.csv"
 PaxNLyear=pd.read_csv("full_years_PaxNL.csv") #C:\\Users\\charl\\Downloads\\full_years_PaxNL.csv"
 PaxNLmonths=pd.read_csv("PaxNL_months.csv") #"C:\\Users\\charl\\Downloads\\PaxNLmonths.csv"
 PaxNLkwartaal=pd.read_csv("PaxNL_kwartaal.csv")
