@@ -14,7 +14,6 @@ from folium import plugins
 from folium import IFrame
 from streamlit_folium import folium_static
 from streamlit_folium import st_folium
-import seaborn as sns
 import plotly.express as px
 import streamlit as st
 import plotly.graph_objects as go
