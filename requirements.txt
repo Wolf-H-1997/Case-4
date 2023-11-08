@@ -7,7 +7,7 @@ folium==0.14.0
 matplotlib
 scipy
 json5==0.9.5
-scikit-learn==0.24.2
+scikit-learn==0.24.1
 scikit-image==0.18.1
 sklearn==0.0.post11
 threadpoolctl == 2.0.0
