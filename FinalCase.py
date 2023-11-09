@@ -10,8 +10,7 @@ import numpy as np
 import requests
 import json
 import folium
-from folium import plugins
-from folium import IFrame
+from streamlit_folium import st_folium
 from streamlit_folium import folium_static
 import plotly.express as px
 import streamlit as st
@@ -19,12 +18,16 @@ import plotly.graph_objects as go
 import sklearn
 from plotly.subplots import make_subplots
 from sklearn.metrics import r2_score
+from PIL import Image
 
 
-
+st.set_page_config(layout='wide')
 # ## Importing Data
+image = Image.open("w03328-small.jpg")
+st.image(image)
 
 # In[25]:
+
 
 
 PaxNL=pd.read_csv("Pax movement clean.csv") #"C:\\Users\\charl\\Downloads\\Pax movement clean.csv"
@@ -187,15 +190,23 @@ PaxNLyear['Jaar'] = PaxNLyear['Perioden'].dt.year
 # In[16]:
 
 
-st.title('Bar plot van de totale vluchten per jaar')
+st.subheader('Bar plot van de totale vluchten per jaar')
 
 fig = px.bar(PaxNLyear, x='Jaar', y='Totaal Vluchten', color='Luchthavens', barmode='group',
              title='Totale vluchten per jaar',
              color_discrete_sequence=px.colors.qualitative.Plotly)
 
-st.plotly_chart(fig)
 
-
+col1, col2 = st.columns(2)
+col1.plotly_chart(fig)
+col2.write("")
+col2.write('')
+col2.write("")
+col2.write("")
+col2.write("")
+col2.write("")
+col2.write('Barplot met de totaal gevlogen vluchten per jaar. We zien een dip van 2019 naar 2022, dit komt door de coronapandemie. Ook kan je zien dat Schiphol verweg de meeste vluchten behandelen per jaar.')
+st.divider()
 # In[17]:
 
 
@@ -247,8 +258,14 @@ for i, year in enumerate(years):
 updatemenu.append(dict(buttons=year_buttons, direction="down", showactive=True, x=0.1, xanchor="left", y=1.1, yanchor="top"))
 
 fig.update_layout(title_text="Aantal passagiers per jaar", updatemenus=updatemenu)
-
-st.plotly_chart(fig)
+col3, col4 = st.columns(2)
+col3.write("")
+col3.write("")
+col3.write("")
+col3.write("")
+col3.write("In deze piechart kan je kiezen tussen jaar, vluchten, en type vlucht")
+col4.plotly_chart(fig)
+st.divider()
 
 
 # #### Per kwartaal
@@ -360,15 +377,30 @@ table_df = pd.DataFrame({
     'R-squared': r2_data
 })
 
-# Display the table
-st.dataframe(table_df)
-st.plotly_chart(fig)
+# Display the 
+col5, col6 = st.columns(2)
+col6.write("")
+col6.write("")
+col6.write("")
+col6.write(table_df, fit_columns_to_data = True)
+col6.write("In de plot is gewerkt met een logaritmische schaal zodat elke vliegveld een duidelijke lijn heeft. Ook is er een voorspelling gemaakt met een vrij lage R-squared, dat deze zo laag is komt waarschijnlijk omdat vliegvelden drukke en minder drukken seizoenen draaien. Ook zie je dat alleen het vliegveld van Maastricht een negatieve voorspelling heeft.")
+col5.plotly_chart(fig)
 
 
 # ## Hulpbronnen
 
 # In[22]:
-
+# Create a separate graph for residuals
+# Create a dropdown menu for airport selection
+selected_airport = st.selectbox('Select Airport', airports)
+ 
+# Create a separate graph for residuals based on the selected airport
+for airport, residuals, color in zip(airports, residuals_data, colors.values()):
+    if airport == selected_airport:
+        fig_res = go.Figure()
+        fig_res.add_trace(go.Scatter(x=PaxNLmonths[PaxNLmonths['Luchthavens'] == airport]['Perioden'], y=residuals, mode='markers', name='Residuals', marker=dict(color=color)))
+        fig_res.update_layout(title=f"Residuals for {airport}", xaxis_title='Time', yaxis_title='Residuals')
+        st.plotly_chart(fig_res)
 
 
 # Group the data by 'Land' and 'Perioden' and sum the 'Totaal Passagiers' values
@@ -379,8 +411,7 @@ sorted_data_2019 = LandenSchiphol[LandenSchiphol['Perioden'] == 2019].groupby('L
 sorted_data_2020 = LandenSchiphol[LandenSchiphol['Perioden'] == 2020].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
 sorted_data_2021 = LandenSchiphol[LandenSchiphol['Perioden'] == 2021].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
 sorted_data_2022 = LandenSchiphol[LandenSchiphol['Perioden'] == 2022].groupby('Land')[['Passagiers Aangekomen', 'Passagiers Vertrokken']].sum().sort_values('Passagiers Aangekomen', ascending=False)
-
-st.title("Passenger Details by Country")
+st.divider()
 
 # Create figure
 fig = go.Figure()
@@ -396,40 +427,50 @@ for data, year in zip([sorted_data_2019, sorted_data_2020, sorted_data_2021, sor
 
 # Set title
 fig.update_layout(
-    title_text="Passenger Details by Country",
-    xaxis_title="Country",
-    yaxis_title="Passenger Count",
+    title_text="Passagiers per land",
+    xaxis_title="Land",
+    yaxis_title="Aantal passagiers",
 )
 
+# Set updatemenus attribute
+updatemenus = [
+    {
+        "buttons": [
+            {
+                "label": "All",
+                "method": "update",
+                "args": [{"visible": [True, True, True, True, True, True, True, True]}, {"title": "All"}],
+            },
+            {
+                "label": "2019",
+                "method": "update",
+                "args": [{"visible": [True, True, False, False, False, False, False, False]}, {"title": "2019"}],
+            },
+            {
+                "label": "2020",
+                "method": "update",
+                "args": [{"visible": [False, False, True, True, False, False, False, False]}, {"title": "2020"}],
+            },
+            {
+                "label": "2021",
+                "method": "update",
+                "args": [{"visible": [False, False, False, False, True, True, False, False]}, {"title": "2021"}],
+            },
+            {
+                "label": "2022",
+                "method": "update",
+                "args": [{"visible": [False, False, False, False, False, False, True, True]}, {"title": "2022"}],
+            },
+        ],
+        "y": 1.3,  
+        "x": 0.5,  
+        "xanchor": "center",
+        "yanchor": "top",
+    }
+]
+ 
 # Add dropdown for the year
-fig.update_layout(
-    updatemenus=[
-        dict(
-            buttons=list([
-                dict(label="All",
-                     method="update",
-                     args=[{"visible": [True, True, True, True, True, True, True, True]},
-                           {"title": "All"}]),
-                dict(label="2019",
-                     method="update",
-                     args=[{"visible": [True, True, False, False, False, False, False, False]},
-                           {"title": "2019"}]),
-                dict(label="2020",
-                     method="update",
-                     args=[{"visible": [False, False, True, True, False, False, False, False]},
-                           {"title": "2020"}]),
-                dict(label="2021",
-                     method="update",
-                     args=[{"visible": [False, False, False, False, True, True, False, False]},
-                           {"title": "2021"}]),
-                dict(label="2022",
-                     method="update",
-                     args=[{"visible": [False, False, False, False, False, False, True, True]},
-                           {"title": "2022"}]),
-            ]),
-        )
-    ]
-)
+fig.update_layout(updatemenus=updatemenus)
 
 # Add range slider
 fig.update_layout(
@@ -441,141 +482,245 @@ fig.update_layout(
     ),
     barmode='stack'  # Add this line to stack the bars
 )
+# Create a layout with two columns
+col1, col2 = st.columns(2)
+ 
+# Plotly chart in the first column
+with col1:
+    st.subheader("Passagiers per land van/naar Schiphol")
+    st.plotly_chart(fig)
+ 
+# Folium map in the second column
+with col2:
+    st.subheader('Kaart met vliegveld data')
+    map_center = [52.1326, 5.2913]
+    kaart = folium.Map(location=map_center, zoom_start=7, max_bounds=True)
+    # zwart wit
 
-st.plotly_chart(fig)
+    folium.TileLayer('cartodbpositron', name='CartoDB Positron').add_to(kaart)
+ 
+    # vliegveld coördinaten
 
+    schiphol = [52.308056, 4.764167]
 
-# # Streamlit
+    rotterdam = [51.9555086, 4.4398832]
 
-# In[23]:
+    eindhoven = [51.4583691, 5.3920556]
 
+    maastricht = [50.91249905, 5.77132050283004]
 
-map_center = [52.1326, 5.2913]
+    groningen = [53.1214959, 6.58172323449291]
+ 
+ 
+    # Maak apparte popups
 
-# maak  kaart
-kaart = folium.Map(location=map_center, zoom_start=7, max_bounds=True)
+    schiphol_popup = folium.Popup("Schiphol Airport", parse_html=True)
 
-# zwart wit
-folium.TileLayer('cartodbpositron', name='CartoDB Positron').add_to(kaart)
+    rotterdam_popup = folium.Popup("Rotterdam The Hague Airport")
 
-# vliegveld coördinaten
-schiphol = [52.308056, 4.764167]
-rotterdam = [51.9555086, 4.4398832]
-eindhoven = [51.4583691, 5.3920556]
-maastricht = [50.91249905, 5.77132050283004]
-groningen = [53.1214959, 6.58172323449291]
+    eindhoven_popup = folium.Popup("Eindhoven Airport")
 
+    maastricht_popup = folium.Popup("Maastricht Aachen Airport")
 
-# Maak apparte popups
-schiphol_popup = folium.Popup("Schiphol Airport", parse_html=True)
-rotterdam_popup = folium.Popup("Rotterdam The Hague Airport")
-eindhoven_popup = folium.Popup("Eindhoven Airport")
-maastricht_popup = folium.Popup("Maastricht Aachen Airport")
-groningen_popup = folium.Popup("Groningen Airport Eelde")
-# HTML content voor in de pop ups
-popup_content_schiphol = f"""
-<b>Flight Information at Schiphol Airport:</b><br>
-<table>
-    <tr>
-        <th>Flight Name</th>
-        <th>scheduleDate</th>
-        <th>Schedule Time</th>
-        <th>route destinations</th>
+    groningen_popup = folium.Popup("Groningen Airport Eelde")
 
-    </tr>
-"""
-popup_content_rotterdam = f"""
-<b>Flight Information at Rotterdam The Hague Airport:</b><br>
-<table>
-    <tr>
-        <th>Perioden</th>
-        <th>Totaal aantal vluchten</th>
-        <th>Aantal passagiers</th>
-    </tr>
-"""
-popup_content_eindhoven = f"""
-<b>Flight Information at Eindhoven Airport:</b><br>
-<table>
-    <tr>
-        <th>Perioden</th>
-        <th>Totaal aantal vluchten</th>
-        <th>Aantal passagiers</th>
-    </tr>
-"""
-popup_content_maastricht = f"""
-<b>Flight Information at Maastricht Aachen Airport:</b><br>
-<table>
-    <tr>
-        <th>Perioden</th>
-        <th>Totaal aantal vluchten</th>
-        <th>Aantal passagiers</th>
-    </tr>
-"""
-popup_content_groningen = f"""
-<b>Flight Information at Groningen Airport Eelde:</b><br>
-<table>
-    <tr>
-        <th>Perioden</th>
-        <th>Totaal aantal vluchten</th>
-        <th>Aantal passagiers</th>
-    </tr>
-"""
+    # HTML content voor in de pop ups
 
-for _, row in PaxNL_Rotterdam.iterrows():
-    popup_content_rotterdam += f"""
-    <tr>
-        <td>{row['Jaar']}</td>
-        <td>{row['Totaal Vluchten']}</td>
-        <td>{row['Aantal passagiers']}</td>
-    <tr>
-    """
-for _, row in PaxNL_Eindhoven.iterrows():
-    popup_content_eindhoven += f"""
-    <tr>
-        <td>{row['Jaar']}</td>
-        <td>{row['Totaal Vluchten']}</td>
-        <td>{row['Aantal passagiers']}</td>
-    <tr>
-    """
-for _, row in PaxNL_Maastricht.iterrows():
-    popup_content_maastricht += f"""
-    <tr>
-        <td>{row['Jaar']}</td>
-        <td>{row['Totaal Vluchten']}</td>
-        <td>{row['Aantal passagiers']}</td>
-    <tr>
-    """
-for _, row in PaxNL_Groningen.iterrows():
-    popup_content_groningen += f"""
-    <tr>
-        <td>{row['Jaar']}</td>
-        <td>{row['Totaal Vluchten']}</td>
-        <td>{row['Aantal passagiers']}</td>
-    <tr>
+    popup_content_schiphol = f"""
+
+    <b>Flight Information at Schiphol Airport:</b><br>
+
+    <table>
+
+        <tr>
+
+            <th>Flight Name</th>
+
+            <th>scheduleDate</th>
+
+            <th>Schedule Time</th>
+
+            <th>route destinations</th>
+ 
+        </tr>
+
     """
 
-# Schiphol met de informatie van de api
-for _, row in df4.iterrows():
-    popup_content_schiphol += f"""
-    <tr>
-        <td>{row['flightName']}</td>
-        <td>{row['scheduleDate']}</td>
-        <td>{row['scheduleTime']}</td>
-        <td>{row['route.destinations']}</td>
-    </tr>
-"""
+    popup_content_rotterdam = f"""
 
-# Close the HTML table and popup content
-#popup_content_schiphol += "</table>"
-#popup_content_rotterdam += "</table>"
+    <b>Flight Information at Rotterdam The Hague Airport:</b><br>
 
-# voeg de popups toe aan de kaart
-folium.Marker(schiphol, popup=popup_content_schiphol).add_to(kaart)
-folium.Marker(rotterdam, popup=popup_content_rotterdam).add_to(kaart)
-folium.Marker(eindhoven, popup=popup_content_eindhoven).add_to(kaart)
-folium.Marker(maastricht, popup=popup_content_maastricht).add_to(kaart)
-folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
+    <table>
 
-# laat de kaart zien
-kaart
+        <tr>
+
+            <th>Perioden</th>
+
+            <th>Totaal aantal vluchten</th>
+
+            <th>Aantal passagiers</th>
+
+        </tr>
+
+    """
+
+    popup_content_eindhoven = f"""
+
+    <b>Flight Information at Eindhoven Airport:</b><br>
+
+    <table>
+
+        <tr>
+
+            <th>Perioden</th>
+
+            <th>Totaal aantal vluchten</th>
+
+            <th>Aantal passagiers</th>
+
+        </tr>
+
+    """
+
+    popup_content_maastricht = f"""
+
+    <b>Flight Information at Maastricht Aachen Airport:</b><br>
+
+    <table>
+
+        <tr>
+
+            <th>Perioden</th>
+
+            <th>Totaal aantal vluchten</th>
+
+            <th>Aantal passagiers</th>
+
+        </tr>
+
+    """
+
+    popup_content_groningen = f"""
+
+    <b>Flight Information at Groningen Airport Eelde:</b><br>
+
+    <table>
+
+        <tr>
+
+            <th>Perioden</th>
+
+            <th>Totaal aantal vluchten</th>
+
+            <th>Aantal passagiers</th>
+
+        </tr>
+
+    """
+ 
+    for _, row in PaxNL_Rotterdam.iterrows():
+
+        popup_content_rotterdam += f"""
+
+        <tr>
+
+            <td>{row['Jaar']}</td>
+
+            <td>{row['Totaal Vluchten']}</td>
+
+            <td>{row['Aantal passagiers']}</td>
+
+        <tr>
+
+        """
+
+    for _, row in PaxNL_Eindhoven.iterrows():
+
+        popup_content_eindhoven += f"""
+
+        <tr>
+
+            <td>{row['Jaar']}</td>
+
+            <td>{row['Totaal Vluchten']}</td>
+
+            <td>{row['Aantal passagiers']}</td>
+
+        <tr>
+
+        """
+
+    for _, row in PaxNL_Maastricht.iterrows():
+
+        popup_content_maastricht += f"""
+
+        <tr>
+
+            <td>{row['Jaar']}</td>
+
+            <td>{row['Totaal Vluchten']}</td>
+
+            <td>{row['Aantal passagiers']}</td>
+
+        <tr>
+
+        """
+
+    for _, row in PaxNL_Groningen.iterrows():
+
+        popup_content_groningen += f"""
+
+        <tr>
+
+            <td>{row['Jaar']}</td>
+
+            <td>{row['Totaal Vluchten']}</td>
+
+            <td>{row['Aantal passagiers']}</td>
+
+        <tr>
+
+        """
+ 
+    # Schiphol met de informatie van de api
+
+    for _, row in df4.iterrows():
+
+        popup_content_schiphol += f"""
+
+        <tr>
+
+            <td>{row['flightName']}</td>
+
+            <td>{row['scheduleDate']}</td>
+
+            <td>{row['scheduleTime']}</td>
+
+            <td>{row['route.destinations']}</td>
+
+        </tr>
+
+    """
+ 
+    # Close the HTML table and popup content
+
+    #popup_content_schiphol += "</table>"
+
+    #popup_content_rotterdam += "</table>"
+ 
+    # voeg de popups toe aan de kaart
+
+    folium.Marker(schiphol, popup=popup_content_schiphol).add_to(kaart)
+
+    folium.Marker(rotterdam, popup=popup_content_rotterdam).add_to(kaart)
+
+    folium.Marker(eindhoven, popup=popup_content_eindhoven).add_to(kaart)
+
+    folium.Marker(maastricht, popup=popup_content_maastricht).add_to(kaart)
+
+    folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
+    folium_static(kaart, width=700)
+
+
+
 
