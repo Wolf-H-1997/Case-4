@@ -579,5 +579,5 @@ folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
 
 
 # laat de kaart zien
-st.folium(kaart)
+st_folium(kaart)
 
