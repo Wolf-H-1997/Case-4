@@ -576,8 +576,6 @@ folium.Marker(eindhoven, popup=popup_content_eindhoven).add_to(kaart)
 folium.Marker(maastricht, popup=popup_content_maastricht).add_to(kaart)
 folium.Marker(groningen, popup=popup_content_groningen).add_to(kaart)
 
-
-
 # laat de kaart zien
-st_folium(kaart)
+st_folium(kaart, width = 700)
 
